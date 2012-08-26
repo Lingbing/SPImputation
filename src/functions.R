@@ -49,12 +49,6 @@ findmax <- function(x, r){
   }
 }
 
-cutoff.miss <- function(data){
-  # use CUTOFF method, return the imputed complete data matrix
-  # default cutoff value is 0.65
-  
-  CutoffImputation(data, cutoff=0.65)$imputed
-}
 
 VarInfo <- function(x, type = "NA"){
   
