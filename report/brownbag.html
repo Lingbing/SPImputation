@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<title>Agenda</title>
+
+<base target="_blank"/>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+
+
+<!-- MathJax scripts -->
+<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+
+</head>
+
+<body>
+<p>% Missing Value Imputation for Spatio-Temporal Data Analysis: Case Study on Monthly Rainfall Data<br/>
+% Lingbing Feng<br/>
+% 2012/09/110</p>
+
+<h1>Agenda</h1>
+
+<ul>
+<li>Motivation
+
+<ul>
+<li>What is Spatio-Temporal &amp; Imputation</li>
+<li>Why it it important &amp; difficult<br/></li>
+<li>What is our aim?</li>
+</ul></li>
+<li>Related Literature
+
+<ul>
+<li>Literarure Review</li>
+<li>Status</li>
+</ul></li>
+<li>Methods
+
+<ul>
+<li>SVD</li>
+<li>CUTOFF</li>
+</ul></li>
+<li>Case Study in Australia
+
+<ul>
+<li>Data and EDA</li>
+<li>Crossvalidation</li>
+<li>Imputation Performance</li>
+<li>Comparison and more</li>
+</ul></li>
+<li>Potential and Future Work
+
+<ul>
+<li>spatially</li>
+<li>temporally</li>
+<li>frequency</li>
+</ul></li>
+</ul>
+
+<h1>Spatio-Temporal Data</h1>
+
+<p><strong><em>Spatio-temproral data: data with spatial (geographic), temporal components, and attributes.</em></strong></p>
+
+<ul>
+<li><p>Where  &mdash;&mdash; space</p></li>
+<li><p>when   &mdash;&mdash; time</p></li>
+<li><p>what   &mdash;&mdash; attributes</p></li>
+</ul>
+
+<p><em>You can think it as a set of multivariate time series that are geographically distributed</em></p>
+
+<p><em>&ldquo;space-time: the next frontier&rdquo;</em> &ndash; Noel Cressie &amp; Christopher K. Wikle ( 2011 )</p>
+
+<h1>Examples</h1>
+
+<ul>
+<li><p>Climatic readings ( temperature, rainfall, riverflow, etc. ) for a number of nearby stations</p></li>
+<li><p>Satellite images of parts of the earth</p></li>
+<li><p>Election results for voting districts and a number of consecutive elections</p></li>
+<li><p>GPS tracks for people or animal possibly with additional sensor readings</p></li>
+<li><p>Desease outbreaks or volcano eruption</p></li>
+<li><p>…</p></li>
+</ul>
+
+<h1>what is imputation and why?</h1>
+
+<ul>
+<li><p>Filling Missing values, completing the incomplete data</p></li>
+<li><p>For data structure consistency, and ultimately for modelling </p></li>
+<li><p>Model estimating procedure assumes faily completeness upon the data matrix</p></li>
+<li><p>If there were missing values in your data, sooner or later, you would have to face the problem.</p></li>
+</ul>
+
+<h1>It is difficult when</h1>
+
+<ul>
+<li><p>You take it seriously, rather than saying:<em>&ldquo;Here we have chosen to ignore the missing values&rdquo;</em>, or <em>&ldquo;For the sake of convenience, we case-wise delete all the missing values&rdquo;</em></p></li>
+<li><p>You take it very seriously, and you want to impute the missing value by incorporating as much valuable information as possible. </p></li>
+<li><p>You take it extremly seriously, and you want an algorithm which is intuitively simple, credible, and computational efficient.</p></li>
+</ul>
+
+<h1>Our aim</h1>
+
+<ul>
+<li><p>To develope a simple, intuitive, credible method to impute spatio-temporal model</p></li>
+<li><p>which takes both spatial and temporal information into consideration</p></li>
+<li><p>and we hope it&#39;d be faster than some universally accepted method</p></li>
+</ul>
+
+<h1>What have we achieved</h1>
+
+<ul>
+<li><p>Developed a method called <strong>CUTOFF</strong> that meets our aim</p></li>
+<li><p>Applied it to a monthly rainfall data</p></li>
+<li><p>Some visualization, simulation and cross-validation tools that are useful when analysing spatio-temporal data</p></li>
+</ul>
+
+<h1>Related Literature (cont&#39;d)</h1>
+
+<ul>
+<li><p>Schneider (2001) proposes a parametric method that makes use of E-M algorithm and ridge regression to estimate the mean and covariance matrix of the data iteratively. (<em>spatially weak, and no package supported</em>)</p></li>
+<li><p>Kondrashov et al. (2006) developes an novel, iterative for of M-SSA( Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.</p></li>
+<li><p>It raised a heat debate (Schneider (2006)&#39;s interesting comment and Kondrashov et al.&#39;s rejoinder)</p></li>
+</ul>
+
+<h1>We found</h1>
+
+<ul>
+<li><p>K&#39;s idea comes down to matrix decomposition and EM algorithm</p></li>
+<li><p>The cros-validation procedure used in their paper is vague and thus untenable</p></li>
+<li><p>Heavily relying on the MAR ( Missing At Random)assumption. MAR is, techinically, impossible.</p></li>
+</ul>
+
+<h1>SVD imputation</h1>
+
+<ul>
+<li><p>Fuentes et al.(2006), it is stable and reasonble </p></li>
+<li><p>partly nonparametric, E-M like</p></li>
+<li><p>standard imputation method in the <code>SpatioTemporal</code> R pakage </p></li>
+</ul>
+
+<p>We consider it as the competetor </p>
+
+<h1>Methods: SVD</h1>
+
+<ul>
+<li>Assume a typical S-P data set comprises \( x \) monitoring sites and each site has \( t \) observations. This S-P process can be modelled as 
+\[ Z(s,t)=\mu(s,t)+\varepsilon(x,t) \]
+and thus \[ \mathbf{Z}=\mathbf{M}+\mathbf{E} \]</li>
+<li>\( \mathbf{M} \) is the trend component and \( \mathbf{E} \) is the resudual component. M can be modelled by using SVD. so \[ \mathbf{M}=\mathbf{F\cdot B} \]</li>
+<li>\( F=[f_{0}(t)\, f_{1}(t)\, \cdots\, f_{J}(t)] \) being a \( T\times J \) matrix. [basis functions, \( f_{0}(t)\varpropto\mathbf{1} \)]. So matrix \( \mathbf{b} \) is the matrix of trend coefs for the N sites.</li>
+<li>Dimensionality reducing by Taking \( \mathbf{F} \) to be the first \( J \) left singualr vectors of the singular value decompostion \( \mathbf{Z=UDV^{'}} \)</li>
+<li>SVD would fail if there is missing value, so Fuentes et al. suggestes&hellip;</li>
+</ul>
+
+<h1>cont&#39;d (the <code>SVD.miss()</code> does so)</h1>
+
+<ul>
+<li>Specify a rank \( J \), default to be 4</li>
+<li>\( \mu_{1} \) is row means of \( mathbf{Z} \), that is the mean values for non-missing values at each time point across all sites. Replace all NAs in \( \mathbf{Z} \) with zeros. </li>
+<li>Regression through each column of \( \mathbf{Z} \) on the initial regressor \( \mu_{1} \) and filling the missing values by the fitted values of the regression on that column. Assume \( Z_{(i,j)} \) were missing, then it would be replaced by \( \alpha_{j}\centerdot\mu_{1(i)} \), where \( \alpha_{j} \) is the regression coef by regressing the \( j^{th} \) column of \( \mathbf{Z} \) on \( \mu_{1} \).</li>
+<li>Compute the \( J \) SVD approximation of the imputed matrix and do regression of each column of the new data matrix on the \( J \) vectors of basis function. The originally missed values are then replaced by the fitted values of this new regression.</li>
+<li>Repeat the SVD and regression until convergence.</li>
+</ul>
+
+<h1>anyway</h1>
+
+<ul>
+<li>The SVD method involves a iterative process of matrix decompisition and regression.</li>
+<li>initializing -&gt; reg(1) -&gt; SVD -&gt; reg -&gt; SVD -&gt; reg -&gt; &hellip;</li>
+<li>Works well when most of the sites share sonme similar temporal patterns</li>
+<li>Be watchful when obs have a substantial variation around the trend, the SVD approx might be a noisy representation of the real pattern</li>
+<li>I reckon the SVD method as being partly temporal imputation rather than spatio-temporally</li>
+</ul>
+
+<h1><code>CUTOFF</code> method</h1>
+
+</body>
+
+</html>
+

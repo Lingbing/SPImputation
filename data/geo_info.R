@@ -222,7 +222,7 @@ corplot.chunk1<-corrplot(cormat.chunk,diag=FALSE,order="hclust",addrect=8,rect.c
 corplot.chunk2<-corrplot(cormat.chunk,diag=FALSE,tl.cex=0.5,tl.col="darkgreen")
 
 # 
-library(sp); library(spacetime); library("rgdal")
+library(sp); library(spacetime); library("rgdal"); library(reshape2)
 sp0 <- SpatialPoints(cbind(stations$Lon, stations$Lat), CRS("+proj=longlat +datum=WGS84"))
 utm54_6 <- CRS("+proj=utm +zone=54:56 +datum=WGS84")
 sp1 <- spTransform(sp0, utm54_6)
@@ -232,9 +232,11 @@ spst <- STFDF(sp1, date.month, data.sp)
 
 # for plotting purposes, we can obtain countey boundaries from pkg maps
 library(maps)
-m <- map2SpatialLines(map("world2", xlim = c(130, 160), ylim = c(-45, -20), plot=F))
+m <- map2SpatialLines(map("worldHires", xlim = c(130, 160), ylim = c(-45, -20), plot=F))
 proj4string(m) = "+proj=longlat +datum=WGS84"
 m = spTransform(m, utm54_6)
 
 # For interpolation, we can dene a grid over the area:
 grd = SpatialPixels(SpatialPoints(makegrid(m, n = 300)), proj4string = proj4string(m))
+layout = list(list("sp.lines", m, col='grey'), list("sp.points", m, first=F, cex=.5))
+stplot(spst, sp.layout = layout)
