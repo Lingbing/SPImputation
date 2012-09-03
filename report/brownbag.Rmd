@@ -146,10 +146,57 @@ and thus $$\mathbf{Z}=\mathbf{M}+\mathbf{E}$$
 * Be watchful when obs have a substantial variation around the trend, the SVD approx might be a noisy representation of the real pattern
 * I reckon the SVD method as being partly temporal imputation rather than spatio-temporally
 
-# `CUTOFF` method (take monthly data for example)
-For each missing value, we try to complete it by following steps:
-* create a reference file with a few station that have a high correlation ($\rho$) with the candidate station. We have developed a cross-validation and also a simulation procedure to choose an optimal $\rho$. 
+# `CUTOFF` method: notations (take monthly data for example)
+Let $x_{(i,j),k}$ be the observation in month $i$ of year $j$ in station $k$. Assume a particular $x_{(i^{*},j^{*}),k^{*}}$ was missing, we call the month $i^{*}$ a candidate month, the year $j^{*}$ and the station $k^{*}$ a candidate station.For each missing value, we complete it by following steps:
 
+* create a **Reference file** with a few stations that have a high correlation ($\rho$) with the candidate station. We have developed a cross-validation plus a simulation procedure to choose the optimal $\rho$.
+* Let $L_{k}$ denote the set of reference station for $k_{th}$ station, and let $J_{i,k}$ denote the set of years for which $x_{(i,j),k}$ is not missing for month $i$ and station $k$, excluding year $j^{*}$.
+* letting $\bar{R}$ be the mean value of observations in the reference file including all available points in years $j$ (not including the candidate year) in month $i$, $\bar{C}$ the mean value of observations in year $j$ in month $i$ for that special candidate station and $R$ the mean of $l$ reference stations in that particular month $i$ and year $j$ ( "R" is the initial of "Reference" and "C" is of "Candidate" ), so
+
+# `CUTOFF` method:(cont'd)
+
+$$
+\begin{eqnarray}
+\bar{R} & = & \frac{\underset{k\in L_{k^{*}}}{\sum}\underset{j\in J_{i^{*},k}}{\sum}x_{(i^{*},j),k}}{\underset{k\in L_{k^{*}}}{\sum}|J_{i^{*},k}|}\nonumber \\
+R & = & \frac{\underset{k\in L_{k^{*}}}{\sum}x_{(i^{*},j^{*}),k}}{|L_{k^{*}}|}\\
+\bar{C} & = & \frac{\underset{j\in J_{i^{*},k^{*}}}{\sum}x_{(i^{*},j),k^{*}}}{|J_{i^{*},k^{*}}|}\nonumber 
+\end{eqnarray}
+$$
+* Let $\hat{x}$be the imputed value for the candidate value , assuming equation below holds
+$$
+\frac{\hat{x}}{R}=\frac{\bar{C}}{\bar{R}}
+$$
+then 
+$$
+\hat{x}=R\cdot\left(\dfrac{\bar{C}}{\bar{R}}\right)
+$$
+
+# `CUTOFF` method: adjustments (cont'd)
+
+* Some stations may have no reference file when the cut-off value is big. If so, we set the nearest station as the reference station no matter what the cut-off value is.
+* If we have done above, then every station should have at least one reference station. However, even so, if by any chance for a candidate station which is missing in a certain time point, the observations in the reference station(s) are missing too, which means it is impossible to compute $R$, then the whole imputation would fail. In the CUTOFF method, this case is circumvented by keeping tracking down the reference list to find a station that is not missing in that time point. Here, the reference list includes all stations sorted by correlation with the candidate station. 
+* There is only one case we could imagine that would fail the whole imputation if we stick to thesteps above-listed, that is when there is a whole row missing. All otherwise cases would be fine imputed by our method.
+
+# Case Study in Australia: Data and EDA
+
+* Murray-Darling Basin, 78 gauging stations
+* 100 years' monthly data (Jan 1911 - Dec 2010)
+* Rainfall
+
+# Representation (Space-wide format)
+
+* Different columns reflect different stations
+
+# locations
+```{r result = "asis", echo = FALSE, message = FALSE, tidy=FALSE}
+setwd("D:/Analysis/SPImputation/data")
+library(googleVis); load("nmissing_station.Rdata")
+stationmap <- gvisMap(data = nmissing_station, locationvar="locationvar", tipvar="id",
+                      options=list(showTip=TRUE, enableScrollWheel=TRUE, mapType='hybrid',
+                                   useMapTypeControl=TRUE, width=1200,height=800),
+                                  chartid="Missing_Counts")
+print(stationmap, "chart")
+```
 
 
 

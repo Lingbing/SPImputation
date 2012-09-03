@@ -62,7 +62,7 @@ library("googleVis")
 lat <- as.character(nmissing_stations$Lat)
 long <- as.character(nmissing_stations$Lon)
 locationvar <- paste(lat, long, sep=":")
-nmissing_station <- transform(nmissing_stations, id=as.character(as.numeric(id)), locationvar = locationvar)
+nmissing_station <- transform(nmissing_stations, id = as.character(as.numeric(id)), locationvar = locationvar)
 rownames(nmissing_station) <- nmissing_stations$id
 
 ## use bubble plot on google maps to illustrate the missing proportions of each station
@@ -70,11 +70,11 @@ missing_bubble<-gvisBubbleChart(nmissing_station,idvar="id",xvar="Lat",yvar="Lon
 plot(missing_bubble)## seems of no use at all!
 
 ## missing on the map(should be better than the bubble plot)
-missing_map<-gvisGeoMap(data=nmissing_station,locationvar="locationvar",numvar="nmissings",hovervar="id",
-                        options=list(region="AU",width=1100,height=1100,dataMode="markers",showZoomOut=TRUE),chartid="Missing_Counts")
+missing_map<-gvisGeoMap(data=nmissing_stations,locationvar="locationvar", numvar="nmissings", hovervar="id",
+                        options=list(region="AU", width=1100, height=1100, dataMode="markers", showZoomOut=TRUE), chartid="Missing_Counts")
 plot(missing_map)
 # below is for merging
-missing_map2<-gvisGeoMap(data=nmissing_station,locationvar="locationvar",numvar="nmissings",hovervar="id",
+missing_map2<-gvisGeoMap(data=nmissing_station, locationvar="locationvar",numvar="nmissings",hovervar="id",
                          options=list(region="AU",width=500,height=500,dataMode="markers",showZoomOut=TRUE),chartid="Missing_Counts")
 
 ## however, there is overlap among stations. One idea is to use heatmap-wise plot on map in which the size are identical
@@ -92,11 +92,10 @@ plot(missing_geochart)
 #                                             keepAspectRatio=FALSE,width=500,height=300),
 #                                chartid="Missing_Counts")
 ## utilize google map to locate 78 stations. srollwheel and hybrid map and map control could be used
-missing_map2<-gvisMap(data=nmissing_station,locationvar="locationvar",tipvar="id",
-                      options=list(showTip=TRUE,enableScrollWheel=TRUE,
-                                   mapType='hybrid', useMapTypeControl=TRUE,
-                                   width=1200,height=800),chartid="Missing_Counts")
-plot(missing_map2)
+stationmap <- gvisMap(data = nmissing_station, locationvar="locationvar", tipvar="id",
+                      options=list(showTip=TRUE, enableScrollWheel=TRUE, mapType='hybrid',
+                                   useMapTypeControl=TRUE, width=1200,height=800), chartid="Missing_Counts")
+plot(stationmap)
 # below is for merging
 # missing_map3<-gvisMap(data=nmissing_station,locationvar="locationvar",tipvar="id",
 #                       options=list(showTip=TRUE,enableScrollWheel=TRUE,
