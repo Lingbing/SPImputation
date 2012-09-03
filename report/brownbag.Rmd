@@ -191,11 +191,11 @@ $$
 ```{r result = "asis", echo = FALSE, message = FALSE, tidy=FALSE}
 setwd("D:/Analysis/SPImputation/data")
 library(googleVis); load("nmissing_station.Rdata")
-stationmap <- gvisMap(data = nmissing_station, locationvar="locationvar", tipvar="id",
+stationmap <- gvisMap(nmissing_station, locationvar="locationvar", tipvar="id",
                       options=list(showTip=TRUE, enableScrollWheel=TRUE, mapType='hybrid',
                                    useMapTypeControl=TRUE, width=1200,height=800),
                                   chartid="Missing_Counts")
-print(stationmap, "chart")
+print(stationmap, 'chart')
 ```
 
 
