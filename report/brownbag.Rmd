@@ -1,8 +1,12 @@
-% Missing Value Imputation for Spatio-Temporal Data Analysis: Case Study on Monthly Rainfall Data
+% Missing Value Imputation for Spatio-Temporal Data Analysis: A Case Study
 % Lingbing Feng
-% 2012/09/110
+% 2012/09/17
 
+# Missing Value
 
+![Missing Piece](http://i.imgur.com/45zNc.jpg)
+
+---
 
 
 # Agenda
@@ -13,19 +17,16 @@
 	- What is our aim?
 * Related Literature
 	- Literarure Review
-    - Status
+  - Status
 * Methods
     - SVD
     - CUTOFF
 * Case Study in Australia
 	- Data and EDA
-	- Crossvalidation
 	- Imputation Performance
 	- Comparison and more
 * Potential and Future Work
-	- spatially
-	- temporally
-	- frequency
+
 	
 	 
 
@@ -187,16 +188,37 @@ $$
 
 * Different columns reflect different stations
 
+```{r echo=FALSE, message=FALSE,comment=""}
+load("keyobject.Rdata")
+head(hqmr.data[, c(79, 33:39)], 10)
+```
+
 # locations
-```{r result = "asis", echo = FALSE, message = FALSE, tidy=FALSE}
-setwd("D:/Analysis/SPImputation/data")
-library(googleVis); load("nmissing_station.Rdata")
+
+```{r results="asis", echo=FALSE, message=FALSE}
+library(googleVis)
+load("nmissing_station.Rdata")
 stationmap <- gvisMap(nmissing_station, locationvar="locationvar", tipvar="id",
                       options=list(showTip=TRUE, enableScrollWheel=TRUE, mapType='hybrid',
-                                   useMapTypeControl=TRUE, width=1200,height=800),
+                                   useMapTypeControl=TRUE, width=600,height=500),
                                   chartid="Missing_Counts")
-print(stationmap, 'chart')
+print(stationmap, "chart")
 ```
+
+
+# Missing Pattern 
+
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8, fig.show='asis'}
+
+load("station_info.Rdata")
+plot(mdb.pol, border="grey",lty=3, axes=T, xlim=c(139,150), ylim=c(-39,-24))
+
+
+```
+
+
+
+
 
 
 
