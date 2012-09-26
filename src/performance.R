@@ -18,44 +18,20 @@ x1$month <- date.month
 p1 <- ggplot(x1, aes(month, V1)) + geom_line()
 p1 + geom_line(data = x1[is.na(x1$V1), ], aes(month, V2), col = "red", lty = 2) +  ylab("Rainfall")
 
-implot <- function(i = 1, start = "1911-01-01", end = "2010-12-01", oridata = hqmr.reorder, impdata = hqmr.new, iso = TRUE, ..., pch = 21, cex = 2){
-  
-  require(ggplot2)
-  
-  x <- as.data.frame(cbind(oridata[, i], impdata[, i]))
-  x$month <- date.month
-  nn <- is.na(x$V1)
-  x.na <- x[, -1]
-  x.na[!nn, 1] <- NA
-  
-  p <- ggplot(x, aes(month, V1)) + geom_line()
-  
-  if(iso) {
-  p <- p + geom_line(data = x.na, aes(month, V2), col = "red", lty = 2) +
-    geom_point(data = x.na, aes(month, V2), col = "red", pch = pch, cex = cex) +
-    ylab("Rainfall")
-  p <- p + scale_x_date(limits = c(as.Date(start), as.Date(end)))
-  }
-  
-  else {
-    p <- p + geom_line(data = x.na, aes(month, V2), col = "red", lty = 2) + ylab("Rainfall")
-    p <- p + scale_x_date(limits = c(as.Date(start), as.Date(end)))
-  }
-  p
-}
 
-p1 <- implot(1, end = "1938-01-01") + ylim(c(0, 280))
+
+p1 <- implot(1, iso = FALSE, end = "1938-01-01") 
 p2 <- implot(2, "1984-01-01")
 p3 <- implot(3, "1991-01-01")
 p4 <- implot(4, "1998-01-01")
-p5 <- implot(5, "1995-01-01")
+p5 <- implot(5, iso = FALSE, "1995-01-01")
 p6 <- implot(6, "1985-01-01") + ylim(c(0, 300))
 p7 <- implot(7, "1998-01-01") + ylim(c(0, 300))
 p8 <- implot(8, "1990-01-01") + ylim(c(0, 250))
 p9 <- implot(9, "1985-01-01") + ylim(c(0, 150))
 p10 <- implot(10, "1995-01-01") + ylim(c(0, 250))
 p11 <- implot(11, "1928-01-01", "1945-01-01") + ylim (c(0, 180))
-p12 <- implot(12， "1985-01-01", "2000-01-01")
+p12 <- implot(12, "1985-01-01", "2000-01-01")
 p13 <- implot(13, "1992-01-01")
 p14 <- implot(14, "1992-01-01")
 p15 <- implot(15, "1998-01-01")
@@ -70,26 +46,17 @@ p23 <- implot(23, "1982-01-01", "2002-01-01")
 p24 <- implot(24, "2000-01-01")
 # 
 
-implot2 <- function(x){
-  require(grid)
-  len <- length(x)
-  grid.newpage()
-  pushViewport(viewport(layout = grid.layout(len, 1)))
-  vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
-  
-  for (i in 1:len){
-  print(x[[i]], vp = vplayout(i, 1))
-  }
-}
 
-implot2(list(p1, p2, p3))
+
+implot2(list(p1, p2, p3, p4, p5, p6))
+save(imputed_plot1, file="imputed_plot1.Rdata")
 implot2(list(p4, p5, p6))
 implot2(list(p7, p8, p9))
 implot2(list(p10, p11, p12))
 
 ### comparison with the SVD method
 library(SpatioTemporal)
-system.time(hqmr.new2 <- SVD.miss(hqmr.reorder[, -79])$Xfill)
+system.time(hqmr.new2 <- SVDmiss(hqmr.reorder[, -79])$Xfill)
 # user  system elapsed 
 # 1.72    0.00    1.77
 
@@ -198,7 +165,7 @@ c8 <- implot3(8, "1990-01-01") + ylim(c(0, 250))
 c9 <- implot3(9, "1985-01-01") + ylim(c(0, 150))
 c10 <- implot3(10, "1995-01-01") + ylim(c(0, 250))
 c11 <- implot3(11, "1928-01-01", "1945-01-01") + ylim (c(0, 180))
-c12 <- implot3(12， "1985-01-01", "2000-01-01")
+c12 <- implot3(12, "1985-01-01", "2000-01-01")
 c13 <- implot3(13, "1992-01-01")
 c14 <- implot3(14, "1992-01-01")
 c15 <- implot3(15, "1998-01-01")
