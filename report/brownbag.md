@@ -1,8 +1,12 @@
-% Missing Value Imputation for Spatio-Temporal Data Analysis: Case Study on Monthly Rainfall Data
+% Missing Value Imputation for Spatio-Temporal Data Analysis: A Case Study
 % Lingbing Feng
-% 2012/09/110
+% 2012/09/17
 
+# Missing Value
 
+![Missing Piece](http://i.imgur.com/45zNc.jpg)
+
+---
 
 
 # Agenda
@@ -12,20 +16,14 @@
 	- Why it it important & difficult	
 	- What is our aim?
 * Related Literature
-	- Literarure Review
-    - Status
+	
 * Methods
     - SVD
     - CUTOFF
 * Case Study in Australia
-	- Data and EDA
-	- Crossvalidation
-	- Imputation Performance
-	- Comparison and more
+
 * Potential and Future Work
-	- spatially
-	- temporally
-	- frequency
+
 	
 	 
 
@@ -42,8 +40,6 @@
 
 *You can think it as a set of multivariate time series that are geographically distributed*
 
-
-*"space-time: the next frontier"* -- Noel Cressie & Christopher K. Wikle ( 2011 )
 
 # Examples
 
@@ -65,7 +61,7 @@
 
 * For data structure consistency, and ultimately for modelling 
 
-* Model estimating procedure assumes faily completeness upon the data matrix
+* Model estimating procedure assumes fairly completeness upon the data matrix
 
 * If there were missing values in your data, sooner or later, you would have to face the problem.
 
@@ -80,26 +76,28 @@
 
 # Our aim 
 
-* To develope a simple, intuitive, credible method to impute spatio-temporal model
+* To develope a simple, intuitive method to impute spatio-temporal data before modelling
 
 * which takes both spatial and temporal information into consideration
 
-* and we hope it'd be faster than some universally accepted method
+* and we hope it'd be faster than some accepted methods
+
 
 # What have we achieved
 
-* Developed a method called **CUTOFF** that meets our aim
+
+* Developed a method which is very simple and intuitive
 
 * Applied it to a monthly rainfall data
 
-* Some visualization, simulation and cross-validation tools that are useful when analysing spatio-temporal data
+* Some tools that are useful when dealing with spatio-temporal missing problem
 
 
 # Related Literature (cont'd)
 
 * Schneider (2001) proposes a parametric method that makes use of E-M algorithm and ridge regression to estimate the mean and covariance matrix of the data iteratively. (*spatially weak, and no package supported*)
 
-* Kondrashov et al. (2006) developes an novel, iterative for of M-SSA( Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.
+* Kondrashov et al. (2006) developes an novel, iterative form of M-SSA (Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.
 
 * It raised a heat debate (Schneider (2006)'s interesting comment and Kondrashov et al.'s rejoinder)
 
@@ -107,14 +105,17 @@
 
 * K's idea comes down to matrix decomposition and EM algorithm
 
-* The cros-validation procedure used in their paper is vague and thus untenable
+* The cross-validation procedure used in their paper is vague and difficult to understand
 
-* Heavily relying on the MAR ( Missing At Random)assumption. MAR is, techinically, impossible.
+* Heavily relying on the MAR (Missing At Random) assumption, which sometimes, is not the truth
+
 
 # SVD imputation
+
+
 * Fuentes et al.(2006), it is stable and reasonble 
 
-* partly nonparametric, E-M like
+* partly nonparametric, E-M like, counld be used before modelling
 
 * standard imputation method in the `SpatioTemporal` R pakage 
 
@@ -122,6 +123,7 @@ We consider it as the competetor
 
 
 # Methods: SVD 
+
 * Assume a typical S-P data set comprises $x$ monitoring sites and each site has $t$ observations. This S-P process can be modelled as 
 $$Z(s,t)=\mu(s,t)+\varepsilon(x,t)$$
 and thus $$\mathbf{Z}=\mathbf{M}+\mathbf{E}$$
@@ -133,7 +135,7 @@ and thus $$\mathbf{Z}=\mathbf{M}+\mathbf{E}$$
 # cont'd (the `SVD.miss()` does so)
 
 * Specify a rank $J$, default to be 4
-* $\mu_{1}$ is row means of $mathbf{Z}$, that is the mean values for non-missing values at each time point across all sites. Replace all NAs in $\mathbf{Z}$ with zeros. 
+* $\mu_{1}$ is row means of $\mathbf{Z}$, that is the mean values for non-missing values at each time point across all sites. Replace all NAs in $\mathbf{Z}$ with zeros. 
 * Regression through each column of $\mathbf{Z}$ on the initial regressor $\mu_{1}$ and filling the missing values by the fitted values of the regression on that column. Assume $Z_{(i,j)}$ were missing, then it would be replaced by $\alpha_{j}\centerdot\mu_{1(i)}$, where $\alpha_{j}$ is the regression coef by regressing the $j^{th}$ column of $\mathbf{Z}$ on $\mu_{1}$.
 * Compute the $J$ SVD approximation of the imputed matrix and do regression of each column of the new data matrix on the $J$ vectors of basis function. The originally missed values are then replaced by the fitted values of this new regression.
 * Repeat the SVD and regression until convergence.
@@ -187,462 +189,568 @@ $$
 
 * Different columns reflect different stations
 
-# locations
 
 ```
-## <!-- Map generated in R 2.15.1 by googleVis 0.2.17 package -->
-## <!-- Mon Sep 03 14:19:56 2012 -->
-## 
-## 
-## <!-- jsHeader -->
-## <script type="text/javascript" src="http://www.google.com/jsapi">
-## </script>
-## <script type="text/javascript">
-##  
-## // jsData 
-## function gvisDataMissing_Counts ()
-## {
-##   var data = new google.visualization.DataTable();
-##   var datajson =
-## [
-##  [
-##       -32.64,
-##      139.65,
-## "20020" 
-## ],
-## [
-##        -34.1,
-##      139.17,
-## "24501" 
-## ],
-## [
-##       -34.18,
-##      139.08,
-## "24511" 
-## ],
-## [
-##        -35.3,
-##      139.03,
-## "24515" 
-## ],
-## [
-##       -35.12,
-##      139.27,
-## "24521" 
-## ],
-## [
-##       -34.57,
-##       139.6,
-## "24535" 
-## ],
-## [
-##        -34.7,
-##      139.96,
-## "25004" 
-## ],
-## [
-##       -35.26,
-##      140.91,
-## "25015" 
-## ],
-## [
-##       -34.79,
-##       140.5,
-## "25018" 
-## ],
-## [
-##       -27.71,
-##      151.87,
-## "41011" 
-## ],
-## [
-##       -28.23,
-##      152.07,
-## "41013" 
-## ],
-## [
-##       -27.21,
-##      151.85,
-## "41024" 
-## ],
-## [
-##       -26.78,
-##      151.11,
-## "41050" 
-## ],
-## [
-##       -28.54,
-##      151.84,
-## "41079" 
-## ],
-## [
-##       -27.72,
-##      151.63,
-## "41082" 
-## ],
-## [
-##       -28.24,
-##      149.12,
-## "42003" 
-## ],
-## [
-##       -26.66,
-##      150.18,
-## "42023" 
-## ],
-## [
-##       -26.77,
-##      148.35,
-## "43026" 
-## ],
-## [
-##       -27.15,
-##      149.07,
-## "43035" 
-## ],
-## [
-##       -26.58,
-##      149.19,
-## "43038" 
-## ],
-## [
-##        -25.8,
-##      146.58,
-## "44002" 
-## ],
-## [
-##       -26.77,
-##      148.35,
-## "44026" 
-## ],
-## [
-##       -28.97,
-##       147.8,
-## "44042" 
-## ],
-## [
-##       -28.81,
-##      147.12,
-## "44054" 
-## ],
-## [
-##       -25.46,
-##      146.03,
-## "44168" 
-## ],
-## [
-##       -30.85,
-##      143.09,
-## "46042" 
-## ],
-## [
-##       -33.39,
-##      142.57,
-## "47029" 
-## ],
-## [
-##       -31.88,
-##      141.59,
-## "47031" 
-## ],
-## [
-##       -33.43,
-##      142.57,
-## "47033" 
-## ],
-## [
-##       -33.33,
-##      141.77,
-## "47045" 
-## ],
-## [
-##       -34.11,
-##      141.91,
-## "47053" 
-## ],
-## [
-##       -29.55,
-##      148.59,
-## "48031" 
-## ],
-## [
-##       -29.32,
-##      145.85,
-## "48039" 
-## ],
-## [
-##       -29.32,
-##      145.85,
-## "49023" 
-## ],
-## [
-##       -34.45,
-##      142.91,
-## "50004" 
-## ],
-## [
-##       -32.29,
-##      147.67,
-## "50018" 
-## ],
-## [
-##        -32.9,
-##      147.52,
-## "50028" 
-## ],
-## [
-##       -32.73,
-##      148.19,
-## "50031" 
-## ],
-## [
-##       -33.07,
-##      147.23,
-## "50052" 
-## ],
-## [
-##       -31.86,
-##      147.13,
-## "51033" 
-## ],
-## [
-##       -31.99,
-##      147.95,
-## "51049" 
-## ],
-## [
-##       -29.35,
-##      148.69,
-## "52019" 
-## ],
-## [
-##       -29.92,
-##      149.79,
-## "53003" 
-## ],
-## [
-##       -28.99,
-##      150.02,
-## "53018" 
-## ],
-## [
-##       -30.38,
-##      150.61,
-## "54003" 
-## ],
-## [
-##       -29.87,
-##      150.57,
-## "54004" 
-## ],
-## [
-##       -29.24,
-##      150.89,
-## "54036" 
-## ],
-## [
-##       -31.18,
-##      150.03,
-## "55045" 
-## ],
-## [
-##       -30.96,
-##      150.46,
-## "55055" 
-## ],
-## [
-##       -31.65,
-##      150.72,
-## "55063" 
-## ],
-## [
-##        -32.6,
-##       149.6,
-## "62021" 
-## ],
-## [
-##       -32.81,
-##      149.98,
-## "62026" 
-## ],
-## [
-##       -33.43,
-##      149.56,
-## "63005" 
-## ],
-## [
-##       -31.27,
-##      149.27,
-## "64008" 
-## ],
-## [
-##       -33.16,
-##      148.59,
-## "65022" 
-## ],
-## [
-##       -34.74,
-##      148.89,
-## "70028" 
-## ],
-## [
-##       -35.16,
-##      147.46,
-## "72150" 
-## ],
-## [
-##       -34.75,
-##      148.32,
-## "73012" 
-## ],
-## [
-##       -34.41,
-##      147.52,
-## "73038" 
-## ],
-## [
-##       -34.48,
-##      146.55,
-## "74007" 
-## ],
-## [
-##       -35.55,
-##      144.95,
-## "74128" 
-## ],
-## [
-##       -35.42,
-##       144.6,
-## "75012" 
-## ],
-## [
-##       -33.61,
-##      146.32,
-## "75050" 
-## ],
-## [
-##       -34.94,
-##      144.73,
-## "75056" 
-## ],
-## [
-##       -34.23,
-##      142.08,
-## "76031" 
-## ],
-## [
-##       -35.09,
-##      141.26,
-## "76063" 
-## ],
-## [
-##       -35.93,
-##      142.85,
-## "77008" 
-## ],
-## [
-##       -36.01,
-##      143.03,
-## "77030" 
-## ],
-## [
-##        -35.5,
-##      142.85,
-## "77039" 
-## ],
-## [
-##       -36.11,
-##      141.42,
-## "78043" 
-## ],
-## [
-##       -36.78,
-##       142.4,
-## "79010" 
-## ],
-## [
-##       -36.74,
-##      141.94,
-## "79036" 
-## ],
-## [
-##       -35.98,
-##      143.85,
-## "80004" 
-## ],
-## [
-##       -36.48,
-##      143.35,
-## "80009" 
-## ],
-## [
-##       -35.88,
-##      145.55,
-## "80065" 
-## ],
-## [
-##       -36.37,
-##      146.71,
-## "82001" 
-## ],
-## [
-##       -36.53,
-##      147.37,
-## "82068" 
-## ],
-## [
-##       -36.85,
-##      146.32,
-## "83032" 
-## ] 
-## ];
-## data.addColumn('number','Latitude');
-## data.addColumn('number','Longitude');
-## data.addColumn('string','id');
-## data.addRows(datajson);
-## return(data);
-## }
-##  
-## // jsDrawChart
-## function drawChartMissing_Counts() {
-##   var data = gvisDataMissing_Counts();
-##   var options = {};
-## options["showTip"] = true;
-## options["enableScrollWheel"] = true;
-## options["mapType"] = "hybrid";
-## options["useMapTypeControl"] = true;
-## options["width"] =   1200;
-## options["height"] =    800;
-## 
-##      var chart = new google.visualization.Map(
-##        document.getElementById('Missing_Counts')
-##      );
-##      chart.draw(data,options);
-##     
-## 
-## }
-##   
-##  
-## // jsDisplayChart 
-## function displayChartMissing_Counts()
-## {
-##   google.load("visualization", "1", { packages:["map"] }); 
-##   google.setOnLoadCallback(drawChartMissing_Counts);
-## }
-##  
-## // jsChart 
-## displayChartMissing_Counts()
-##  
-## <!-- jsFooter -->  
-## //-->
-## </script>
-##  
-## <!-- divChart -->
-##   
-## <div id="Missing_Counts"
-##   style="width: 1200px; height: 800px;">
-## </div>
+         date X048039 X049023 X050004 X050018 X050028 X050031 X050052
+1  1911-01-01    33.2    58.3      NA    80.2    95.0   189.4   116.4
+2  1911-02-01   149.5   133.6      NA    60.2    70.1    57.2    68.9
+3  1911-03-01    14.0    22.8      NA    17.8    41.2    30.0    42.4
+4  1911-04-01     0.0     0.8     8.1     0.0     0.0     0.0     0.4
+5  1911-05-01    47.4    39.9    42.0    72.0    61.3    45.5    31.1
+6  1911-06-01     6.6    23.0    16.5    16.3    12.9    30.5    13.4
+7  1911-07-01     7.1    24.9    44.7    38.3    38.7    45.4    26.5
+8  1911-08-01     1.8    20.5    19.1    54.6    30.5    13.2     4.5
+9  1911-09-01    26.9    37.1    34.6    31.0    19.7    49.6    42.6
+10 1911-10-01     1.3     8.4    14.0     2.5     9.7    10.9     8.0
 ```
+
+
+# locations
+
+<!-- Map generated in R 2.15.1 by googleVis 0.2.17 package -->
+<!-- Tue Sep 11 21:01:20 2012 -->
+
+
+<!-- jsHeader -->
+<script type="text/javascript" src="http://www.google.com/jsapi">
+</script>
+<script type="text/javascript">
+ 
+// jsData 
+function gvisDataMissing_Counts ()
+{
+  var data = new google.visualization.DataTable();
+  var datajson =
+[
+ [
+      -32.64,
+     139.65,
+"20020" 
+],
+[
+       -34.1,
+     139.17,
+"24501" 
+],
+[
+      -34.18,
+     139.08,
+"24511" 
+],
+[
+       -35.3,
+     139.03,
+"24515" 
+],
+[
+      -35.12,
+     139.27,
+"24521" 
+],
+[
+      -34.57,
+      139.6,
+"24535" 
+],
+[
+       -34.7,
+     139.96,
+"25004" 
+],
+[
+      -35.26,
+     140.91,
+"25015" 
+],
+[
+      -34.79,
+      140.5,
+"25018" 
+],
+[
+      -27.71,
+     151.87,
+"41011" 
+],
+[
+      -28.23,
+     152.07,
+"41013" 
+],
+[
+      -27.21,
+     151.85,
+"41024" 
+],
+[
+      -26.78,
+     151.11,
+"41050" 
+],
+[
+      -28.54,
+     151.84,
+"41079" 
+],
+[
+      -27.72,
+     151.63,
+"41082" 
+],
+[
+      -28.24,
+     149.12,
+"42003" 
+],
+[
+      -26.66,
+     150.18,
+"42023" 
+],
+[
+      -26.77,
+     148.35,
+"43026" 
+],
+[
+      -27.15,
+     149.07,
+"43035" 
+],
+[
+      -26.58,
+     149.19,
+"43038" 
+],
+[
+       -25.8,
+     146.58,
+"44002" 
+],
+[
+      -26.77,
+     148.35,
+"44026" 
+],
+[
+      -28.97,
+      147.8,
+"44042" 
+],
+[
+      -28.81,
+     147.12,
+"44054" 
+],
+[
+      -25.46,
+     146.03,
+"44168" 
+],
+[
+      -30.85,
+     143.09,
+"46042" 
+],
+[
+      -33.39,
+     142.57,
+"47029" 
+],
+[
+      -31.88,
+     141.59,
+"47031" 
+],
+[
+      -33.43,
+     142.57,
+"47033" 
+],
+[
+      -33.33,
+     141.77,
+"47045" 
+],
+[
+      -34.11,
+     141.91,
+"47053" 
+],
+[
+      -29.55,
+     148.59,
+"48031" 
+],
+[
+      -29.32,
+     145.85,
+"48039" 
+],
+[
+      -29.32,
+     145.85,
+"49023" 
+],
+[
+      -34.45,
+     142.91,
+"50004" 
+],
+[
+      -32.29,
+     147.67,
+"50018" 
+],
+[
+       -32.9,
+     147.52,
+"50028" 
+],
+[
+      -32.73,
+     148.19,
+"50031" 
+],
+[
+      -33.07,
+     147.23,
+"50052" 
+],
+[
+      -31.86,
+     147.13,
+"51033" 
+],
+[
+      -31.99,
+     147.95,
+"51049" 
+],
+[
+      -29.35,
+     148.69,
+"52019" 
+],
+[
+      -29.92,
+     149.79,
+"53003" 
+],
+[
+      -28.99,
+     150.02,
+"53018" 
+],
+[
+      -30.38,
+     150.61,
+"54003" 
+],
+[
+      -29.87,
+     150.57,
+"54004" 
+],
+[
+      -29.24,
+     150.89,
+"54036" 
+],
+[
+      -31.18,
+     150.03,
+"55045" 
+],
+[
+      -30.96,
+     150.46,
+"55055" 
+],
+[
+      -31.65,
+     150.72,
+"55063" 
+],
+[
+       -32.6,
+      149.6,
+"62021" 
+],
+[
+      -32.81,
+     149.98,
+"62026" 
+],
+[
+      -33.43,
+     149.56,
+"63005" 
+],
+[
+      -31.27,
+     149.27,
+"64008" 
+],
+[
+      -33.16,
+     148.59,
+"65022" 
+],
+[
+      -34.74,
+     148.89,
+"70028" 
+],
+[
+      -35.16,
+     147.46,
+"72150" 
+],
+[
+      -34.75,
+     148.32,
+"73012" 
+],
+[
+      -34.41,
+     147.52,
+"73038" 
+],
+[
+      -34.48,
+     146.55,
+"74007" 
+],
+[
+      -35.55,
+     144.95,
+"74128" 
+],
+[
+      -35.42,
+      144.6,
+"75012" 
+],
+[
+      -33.61,
+     146.32,
+"75050" 
+],
+[
+      -34.94,
+     144.73,
+"75056" 
+],
+[
+      -34.23,
+     142.08,
+"76031" 
+],
+[
+      -35.09,
+     141.26,
+"76063" 
+],
+[
+      -35.93,
+     142.85,
+"77008" 
+],
+[
+      -36.01,
+     143.03,
+"77030" 
+],
+[
+       -35.5,
+     142.85,
+"77039" 
+],
+[
+      -36.11,
+     141.42,
+"78043" 
+],
+[
+      -36.78,
+      142.4,
+"79010" 
+],
+[
+      -36.74,
+     141.94,
+"79036" 
+],
+[
+      -35.98,
+     143.85,
+"80004" 
+],
+[
+      -36.48,
+     143.35,
+"80009" 
+],
+[
+      -35.88,
+     145.55,
+"80065" 
+],
+[
+      -36.37,
+     146.71,
+"82001" 
+],
+[
+      -36.53,
+     147.37,
+"82068" 
+],
+[
+      -36.85,
+     146.32,
+"83032" 
+] 
+];
+data.addColumn('number','Latitude');
+data.addColumn('number','Longitude');
+data.addColumn('string','id');
+data.addRows(datajson);
+return(data);
+}
+ 
+// jsDrawChart
+function drawChartMissing_Counts() {
+  var data = gvisDataMissing_Counts();
+  var options = {};
+options["showTip"] = true;
+options["enableScrollWheel"] = true;
+options["mapType"] = "hybrid";
+options["useMapTypeControl"] = true;
+options["width"] =    800;
+options["height"] =    600;
+
+     var chart = new google.visualization.Map(
+       document.getElementById('Missing_Counts')
+     );
+     chart.draw(data,options);
+    
+
+}
+  
+ 
+// jsDisplayChart 
+function displayChartMissing_Counts()
+{
+  google.load("visualization", "1", { packages:["map"] }); 
+  google.setOnLoadCallback(drawChartMissing_Counts);
+}
+ 
+// jsChart 
+displayChartMissing_Counts()
+ 
+<!-- jsFooter -->  
+//-->
+</script>
+ 
+<!-- divChart -->
+  
+<div id="Missing_Counts"
+  style="width: 800px; height: 600px;">
+</div>
+
+
+
+# Missing Pattern (spatially)
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
+
+
+# Structure Heatmap (temporally, original spatial order)
+
+```r
+source("functions.R")
+HeatStruct(hqmr.cube) + opts(axis.text.x = NULL) + geom_hline(yintercept = c(325, 
+    900), col = "darkblue", lty = 2, lwd = 1)
+```
+
+```
+## Warning: 'ggpcp' is deprecated. See help("Deprecated")
+```
+
+```
+## Warning: 'opts' is deprecated. Use 'theme' instead. See help("Deprecated")
+```
+
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+
+
+# Structure Heatmap (reordered by missingness)
+
+```
+## Warning: 'ggpcp' is deprecated. See help("Deprecated")
+```
+
+```
+## Warning: 'opts' is deprecated. Use 'theme' instead. See help("Deprecated")
+```
+
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
+
+
+# Cross-Validation
+
+* grid-wise
+  * 10 fold on the columns
+  * different row size (1 year, 5 years, 10 years)
+* randomization (both on rows and columns)
+* Mean-RMSE for each CUTOFF value from 0.55-0.95, by 0.05
+
+# CV results
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6.png) 
+
+
+
+
+# Performance (CUTOFF)
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
+
+
+# Comparison 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
+
+
+# Comparison (more)
+
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+
+
+# Simulation
+
+* Capturing the Missing pattern (block Missing and dot missing)
+* Knowing the real value in advance (the middle chunk complete data)
+* In a word: 
+
+# Heat Structure (Transformed $ Reordered)
+
+# Simulation workhorse (a missing vector)
+
+* *n*: length of the vector
+* *maxlen*: max length of missing block 
+* *prob*: fixed probability of being missing for each obs
+* *cnst*: a constant for controlling the probability increment, which is $$ prob^{*}=\frac{count+cnst}{maxlen+cnst}$$
+
+# One simulation
+
+# Conclusion
+
+# Outlook and future work
+
+
+
+
+
 
 
 

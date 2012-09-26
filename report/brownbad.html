@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Lingbing Feng" />
+  <title>Missing Value Imputation for Spatio-Temporal Data Analysis: A Case Study</title>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="http://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+  <script src="http://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js.gz"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div class="slide titlepage">
+  <h1 class="title">Missing Value Imputation for Spatio-Temporal Data Analysis: A Case Study</h1>
+  <p class="author">
+Lingbing Feng
+  </p>
+  <p class="date">2012/09/17</p>
+</div>
+<div class="section slide level1" id="missing-value">
+<h1>Missing Value</h1>
+<div class="figure">
+<img src="http://i.imgur.com/45zNc.jpg" alt="Missing Piece" /><p class="caption">Missing Piece</p>
+</div>
+</div>
+<div class="section slide level1" id="agenda">
+<h1>Agenda</h1>
+<ul class="incremental">
+<li>Motivation</li>
+<li>What is Spatio-Temporal &amp; Imputation
+<ul class="incremental">
+<li>Why it it important &amp; difficult<br /></li>
+<li>What is our aim?</li>
+</ul></li>
+<li>Related Literature
+<ul class="incremental">
+<li>Literarure Review</li>
+</ul></li>
+<li>Status</li>
+<li>Methods
+<ul class="incremental">
+<li>SVD</li>
+<li>CUTOFF</li>
+</ul></li>
+<li>Case Study in Australia
+<ul class="incremental">
+<li>Data and EDA</li>
+<li>Imputation Performance</li>
+<li>Comparison and more</li>
+</ul></li>
+<li>Potential and Future Work</li>
+</ul>
+</div>
+<div class="section slide level1" id="spatio-temporal-data">
+<h1>Spatio-Temporal Data</h1>
+<p><strong><em>Spatio-temproral data: data with spatial (geographic), temporal components, and attributes.</em></strong></p>
+<ul class="incremental">
+<li><p>Where —— space</p></li>
+<li><p>when —— time</p></li>
+<li><p>what —— attributes</p></li>
+</ul>
+<p><em>You can think it as a set of multivariate time series that are geographically distributed</em></p>
+<p><em>“space-time: the next frontier”</em> – Noel Cressie &amp; Christopher K. Wikle ( 2011 )</p>
+</div>
+<div class="section slide level1" id="examples">
+<h1>Examples</h1>
+<ul class="incremental">
+<li><p>Climatic readings ( temperature, rainfall, riverflow, etc. ) for a number of nearby stations</p></li>
+<li><p>Satellite images of parts of the earth</p></li>
+<li><p>Election results for voting districts and a number of consecutive elections</p></li>
+<li><p>GPS tracks for people or animal possibly with additional sensor readings</p></li>
+<li><p>Desease outbreaks or volcano eruption</p></li>
+<li><p>…</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="what-is-imputation-and-why">
+<h1>what is imputation and why?</h1>
+<ul class="incremental">
+<li><p>Filling Missing values, completing the incomplete data</p></li>
+<li><p>For data structure consistency, and ultimately for modelling</p></li>
+<li><p>Model estimating procedure assumes faily completeness upon the data matrix</p></li>
+<li><p>If there were missing values in your data, sooner or later, you would have to face the problem.</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="it-is-difficult-when">
+<h1>It is difficult when</h1>
+<ul class="incremental">
+<li><p>You take it seriously, rather than saying:<em>“Here we have chosen to ignore the missing values”</em>, or <em>“For the sake of convenience, we case-wise delete all the missing values”</em></p></li>
+<li><p>You take it very seriously, and you want to impute the missing value by incorporating as much valuable information as possible.</p></li>
+<li><p>You take it extremly seriously, and you want an algorithm which is intuitively simple, credible, and computational efficient.</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="our-aim">
+<h1>Our aim</h1>
+<ul class="incremental">
+<li><p>To develope a simple, intuitive, credible method to impute spatio-temporal model</p></li>
+<li><p>which takes both spatial and temporal information into consideration</p></li>
+<li><p>and we hope it’d be faster than some universally accepted method</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="what-have-we-achieved">
+<h1>What have we achieved</h1>
+<ul class="incremental">
+<li><p>Developed a method called <strong>CUTOFF</strong> that meets our aim</p></li>
+<li><p>Applied it to a monthly rainfall data</p></li>
+<li><p>Some visualization, simulation and cross-validation tools that are useful when analysing spatio-temporal data</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="related-literature-contd">
+<h1>Related Literature (cont’d)</h1>
+<ul class="incremental">
+<li><p>Schneider (2001) proposes a parametric method that makes use of E-M algorithm and ridge regression to estimate the mean and covariance matrix of the data iteratively. (<em>spatially weak, and no package supported</em>)</p></li>
+<li><p>Kondrashov et al. (2006) developes an novel, iterative for of M-SSA( Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.</p></li>
+<li><p>It raised a heat debate (Schneider (2006)’s interesting comment and Kondrashov et al.’s rejoinder)</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="we-found">
+<h1>We found</h1>
+<ul class="incremental">
+<li><p>K’s idea comes down to matrix decomposition and EM algorithm</p></li>
+<li><p>The cros-validation procedure used in their paper is vague and thus untenable</p></li>
+<li><p>Heavily relying on the MAR ( Missing At Random)assumption. MAR is, techinically, impossible.</p></li>
+</ul>
+</div>
+<div class="section slide level1" id="svd-imputation">
+<h1>SVD imputation</h1>
+<ul class="incremental">
+<li><p>Fuentes et al.(2006), it is stable and reasonble</p></li>
+<li><p>partly nonparametric, E-M like</p></li>
+<li><p>standard imputation method in the <code>SpatioTemporal</code> R pakage</p></li>
+</ul>
+<p>We consider it as the competetor</p>
+</div>
+<div class="section slide level1" id="methods-svd">
+<h1>Methods: SVD</h1>
+<ul class="incremental">
+<li>Assume a typical S-P data set comprises \(x\) monitoring sites and each site has \(t\) observations. This S-P process can be modelled as \[Z(s,t)=\mu(s,t)+\varepsilon(x,t)\] and thus \[\mathbf{Z}=\mathbf{M}+\mathbf{E}\]</li>
+<li>\(\mathbf{M}\) is the trend component and \(\mathbf{E}\) is the resudual component. M can be modelled by using SVD. so \[\mathbf{M}=\mathbf{F\cdot B}\]</li>
+<li>\(F=[f_{0}(t)\, f_{1}(t)\, \cdots\, f_{J}(t)]\) being a \(T\times J\) matrix. [basis functions, \(f_{0}(t)\varpropto\mathbf{1}\)]. So matrix \(\mathbf{b}\) is the matrix of trend coefs for the N sites.</li>
+<li>Dimensionality reducing by Taking \(\mathbf{F}\) to be the first \(J\) left singualr vectors of the singular value decompostion \(\mathbf{Z=UDV^{&#39;}}\)</li>
+<li>SVD would fail if there is missing value, so Fuentes et al. suggestes…</li>
+</ul>
+</div>
+<div class="section slide level1" id="contd-the-svd.miss-does-so">
+<h1>cont’d (the <code>SVD.miss()</code> does so)</h1>
+<ul class="incremental">
+<li>Specify a rank \(J\), default to be 4</li>
+<li>\(\mu_{1}\) is row means of \(mathbf{Z}\), that is the mean values for non-missing values at each time point across all sites. Replace all NAs in \(\mathbf{Z}\) with zeros.</li>
+<li>Regression through each column of \(\mathbf{Z}\) on the initial regressor \(\mu_{1}\) and filling the missing values by the fitted values of the regression on that column. Assume \(Z_{(i,j)}\) were missing, then it would be replaced by \(\alpha_{j}\centerdot\mu_{1(i)}\), where \(\alpha_{j}\) is the regression coef by regressing the \(j^{th}\) column of \(\mathbf{Z}\) on \(\mu_{1}\).</li>
+<li>Compute the \(J\) SVD approximation of the imputed matrix and do regression of each column of the new data matrix on the \(J\) vectors of basis function. The originally missed values are then replaced by the fitted values of this new regression.</li>
+<li>Repeat the SVD and regression until convergence.</li>
+</ul>
+</div>
+<div class="section slide level1" id="anyway">
+<h1>anyway</h1>
+<ul class="incremental">
+<li>The SVD method involves a iterative process of matrix decompisition and regression.</li>
+<li>initializing -&gt; reg(1) -&gt; SVD -&gt; reg -&gt; SVD -&gt; reg -&gt; …</li>
+<li>Works well when most of the sites share sonme similar temporal patterns</li>
+<li>Be watchful when obs have a substantial variation around the trend, the SVD approx might be a noisy representation of the real pattern</li>
+<li>I reckon the SVD method as being partly temporal imputation rather than spatio-temporally</li>
+</ul>
+</div>
+<div class="section slide level1" id="cutoff-method-notations-take-monthly-data-for-example">
+<h1><code>CUTOFF</code> method: notations (take monthly data for example)</h1>
+<p>Let \(x_{(i,j),k}\) be the observation in month \(i\) of year \(j\) in station \(k\). Assume a particular \(x_{(i^{*},j^{*}),k^{*}}\) was missing, we call the month \(i^{*}\) a candidate month, the year \(j^{*}\) and the station \(k^{*}\) a candidate station.For each missing value, we complete it by following steps:</p>
+<ul class="incremental">
+<li>create a <strong>Reference file</strong> with a few stations that have a high correlation (\(\rho\)) with the candidate station. We have developed a cross-validation plus a simulation procedure to choose the optimal \(\rho\).</li>
+<li>Let \(L_{k}\) denote the set of reference station for \(k_{th}\) station, and let \(J_{i,k}\) denote the set of years for which \(x_{(i,j),k}\) is not missing for month \(i\) and station \(k\), excluding year \(j^{*}\).</li>
+<li>letting \(\bar{R}\) be the mean value of observations in the reference file including all available points in years \(j\) (not including the candidate year) in month \(i\), \(\bar{C}\) the mean value of observations in year \(j\) in month \(i\) for that special candidate station and \(R\) the mean of \(l\) reference stations in that particular month \(i\) and year \(j\) ( “R” is the initial of “Reference” and “C” is of “Candidate” ), so</li>
+</ul>
+</div>
+<div class="section slide level1" id="cutoff-methodcontd">
+<h1><code>CUTOFF</code> method:(cont’d)</h1>
+<p>\[
+\begin{eqnarray}
+\bar{R} &amp; = &amp; \frac{\underset{k\in L_{k^{*}}}{\sum}\underset{j\in J_{i^{*},k}}{\sum}x_{(i^{*},j),k}}{\underset{k\in L_{k^{*}}}{\sum}|J_{i^{*},k}|}\nonumber \\
+R &amp; = &amp; \frac{\underset{k\in L_{k^{*}}}{\sum}x_{(i^{*},j^{*}),k}}{|L_{k^{*}}|}\\
+\bar{C} &amp; = &amp; \frac{\underset{j\in J_{i^{*},k^{*}}}{\sum}x_{(i^{*},j),k^{*}}}{|J_{i^{*},k^{*}}|}\nonumber 
+\end{eqnarray}
+\] * Let \(\hat{x}\)be the imputed value for the candidate value , assuming equation below holds \[
+\frac{\hat{x}}{R}=\frac{\bar{C}}{\bar{R}}
+\] then \[
+\hat{x}=R\cdot\left(\dfrac{\bar{C}}{\bar{R}}\right)
+\]</p>
+</div>
+<div class="section slide level1" id="cutoff-method-adjustments-contd">
+<h1><code>CUTOFF</code> method: adjustments (cont’d)</h1>
+<ul class="incremental">
+<li>Some stations may have no reference file when the cut-off value is big. If so, we set the nearest station as the reference station no matter what the cut-off value is.</li>
+<li>If we have done above, then every station should have at least one reference station. However, even so, if by any chance for a candidate station which is missing in a certain time point, the observations in the reference station(s) are missing too, which means it is impossible to compute \(R\), then the whole imputation would fail. In the CUTOFF method, this case is circumvented by keeping tracking down the reference list to find a station that is not missing in that time point. Here, the reference list includes all stations sorted by correlation with the candidate station.</li>
+<li>There is only one case we could imagine that would fail the whole imputation if we stick to thesteps above-listed, that is when there is a whole row missing. All otherwise cases would be fine imputed by our method.</li>
+</ul>
+</div>
+<div class="section slide level1" id="case-study-in-australia-data-and-eda">
+<h1>Case Study in Australia: Data and EDA</h1>
+<ul class="incremental">
+<li>Murray-Darling Basin, 78 gauging stations</li>
+<li>100 years’ monthly data (Jan 1911 - Dec 2010)</li>
+<li>Rainfall</li>
+</ul>
+</div>
+<div class="section slide level1" id="representation-space-wide-format">
+<h1>Representation (Space-wide format)</h1>
+<ul class="incremental">
+<li>Different columns reflect different stations</li>
+</ul>
+<pre><code>         date X048039 X049023 X050004 X050018 X050028 X050031 X050052
+1  1911-01-01    33.2    58.3      NA    80.2    95.0   189.4   116.4
+2  1911-02-01   149.5   133.6      NA    60.2    70.1    57.2    68.9
+3  1911-03-01    14.0    22.8      NA    17.8    41.2    30.0    42.4
+4  1911-04-01     0.0     0.8     8.1     0.0     0.0     0.0     0.4
+5  1911-05-01    47.4    39.9    42.0    72.0    61.3    45.5    31.1
+6  1911-06-01     6.6    23.0    16.5    16.3    12.9    30.5    13.4
+7  1911-07-01     7.1    24.9    44.7    38.3    38.7    45.4    26.5
+8  1911-08-01     1.8    20.5    19.1    54.6    30.5    13.2     4.5
+9  1911-09-01    26.9    37.1    34.6    31.0    19.7    49.6    42.6
+10 1911-10-01     1.3     8.4    14.0     2.5     9.7    10.9     8.0</code></pre>
+</div>
+<div class="section slide level1" id="locations">
+<h1>locations</h1>
+<!-- Map generated in R 2.15.1 by googleVis 0.2.17 package -->
+<!-- Thu Sep  6 10:52:07 2012 -->
+
+
+<!-- jsHeader -->
+<script type="text/javascript" src="http://www.google.com/jsapi">
+</script>
+<script type="text/javascript">
+
+// jsData 
+function gvisDataMissing_Counts ()
+{
+  var data = new google.visualization.DataTable();
+  var datajson =
+[
+ [
+      -32.64,
+     139.65,
+"20020" 
+],
+[
+       -34.1,
+     139.17,
+"24501" 
+],
+[
+      -34.18,
+     139.08,
+"24511" 
+],
+[
+       -35.3,
+     139.03,
+"24515" 
+],
+[
+      -35.12,
+     139.27,
+"24521" 
+],
+[
+      -34.57,
+      139.6,
+"24535" 
+],
+[
+       -34.7,
+     139.96,
+"25004" 
+],
+[
+      -35.26,
+     140.91,
+"25015" 
+],
+[
+      -34.79,
+      140.5,
+"25018" 
+],
+[
+      -27.71,
+     151.87,
+"41011" 
+],
+[
+      -28.23,
+     152.07,
+"41013" 
+],
+[
+      -27.21,
+     151.85,
+"41024" 
+],
+[
+      -26.78,
+     151.11,
+"41050" 
+],
+[
+      -28.54,
+     151.84,
+"41079" 
+],
+[
+      -27.72,
+     151.63,
+"41082" 
+],
+[
+      -28.24,
+     149.12,
+"42003" 
+],
+[
+      -26.66,
+     150.18,
+"42023" 
+],
+[
+      -26.77,
+     148.35,
+"43026" 
+],
+[
+      -27.15,
+     149.07,
+"43035" 
+],
+[
+      -26.58,
+     149.19,
+"43038" 
+],
+[
+       -25.8,
+     146.58,
+"44002" 
+],
+[
+      -26.77,
+     148.35,
+"44026" 
+],
+[
+      -28.97,
+      147.8,
+"44042" 
+],
+[
+      -28.81,
+     147.12,
+"44054" 
+],
+[
+      -25.46,
+     146.03,
+"44168" 
+],
+[
+      -30.85,
+     143.09,
+"46042" 
+],
+[
+      -33.39,
+     142.57,
+"47029" 
+],
+[
+      -31.88,
+     141.59,
+"47031" 
+],
+[
+      -33.43,
+     142.57,
+"47033" 
+],
+[
+      -33.33,
+     141.77,
+"47045" 
+],
+[
+      -34.11,
+     141.91,
+"47053" 
+],
+[
+      -29.55,
+     148.59,
+"48031" 
+],
+[
+      -29.32,
+     145.85,
+"48039" 
+],
+[
+      -29.32,
+     145.85,
+"49023" 
+],
+[
+      -34.45,
+     142.91,
+"50004" 
+],
+[
+      -32.29,
+     147.67,
+"50018" 
+],
+[
+       -32.9,
+     147.52,
+"50028" 
+],
+[
+      -32.73,
+     148.19,
+"50031" 
+],
+[
+      -33.07,
+     147.23,
+"50052" 
+],
+[
+      -31.86,
+     147.13,
+"51033" 
+],
+[
+      -31.99,
+     147.95,
+"51049" 
+],
+[
+      -29.35,
+     148.69,
+"52019" 
+],
+[
+      -29.92,
+     149.79,
+"53003" 
+],
+[
+      -28.99,
+     150.02,
+"53018" 
+],
+[
+      -30.38,
+     150.61,
+"54003" 
+],
+[
+      -29.87,
+     150.57,
+"54004" 
+],
+[
+      -29.24,
+     150.89,
+"54036" 
+],
+[
+      -31.18,
+     150.03,
+"55045" 
+],
+[
+      -30.96,
+     150.46,
+"55055" 
+],
+[
+      -31.65,
+     150.72,
+"55063" 
+],
+[
+       -32.6,
+      149.6,
+"62021" 
+],
+[
+      -32.81,
+     149.98,
+"62026" 
+],
+[
+      -33.43,
+     149.56,
+"63005" 
+],
+[
+      -31.27,
+     149.27,
+"64008" 
+],
+[
+      -33.16,
+     148.59,
+"65022" 
+],
+[
+      -34.74,
+     148.89,
+"70028" 
+],
+[
+      -35.16,
+     147.46,
+"72150" 
+],
+[
+      -34.75,
+     148.32,
+"73012" 
+],
+[
+      -34.41,
+     147.52,
+"73038" 
+],
+[
+      -34.48,
+     146.55,
+"74007" 
+],
+[
+      -35.55,
+     144.95,
+"74128" 
+],
+[
+      -35.42,
+      144.6,
+"75012" 
+],
+[
+      -33.61,
+     146.32,
+"75050" 
+],
+[
+      -34.94,
+     144.73,
+"75056" 
+],
+[
+      -34.23,
+     142.08,
+"76031" 
+],
+[
+      -35.09,
+     141.26,
+"76063" 
+],
+[
+      -35.93,
+     142.85,
+"77008" 
+],
+[
+      -36.01,
+     143.03,
+"77030" 
+],
+[
+       -35.5,
+     142.85,
+"77039" 
+],
+[
+      -36.11,
+     141.42,
+"78043" 
+],
+[
+      -36.78,
+      142.4,
+"79010" 
+],
+[
+      -36.74,
+     141.94,
+"79036" 
+],
+[
+      -35.98,
+     143.85,
+"80004" 
+],
+[
+      -36.48,
+     143.35,
+"80009" 
+],
+[
+      -35.88,
+     145.55,
+"80065" 
+],
+[
+      -36.37,
+     146.71,
+"82001" 
+],
+[
+      -36.53,
+     147.37,
+"82068" 
+],
+[
+      -36.85,
+     146.32,
+"83032" 
+] 
+];
+data.addColumn('number','Latitude');
+data.addColumn('number','Longitude');
+data.addColumn('string','id');
+data.addRows(datajson);
+return(data);
+}
+
+// jsDrawChart
+function drawChartMissing_Counts() {
+  var data = gvisDataMissing_Counts();
+  var options = {};
+options["showTip"] = true;
+options["enableScrollWheel"] = true;
+options["mapType"] = "hybrid";
+options["useMapTypeControl"] = true;
+options["width"] =    800;
+options["height"] =    600;
+
+     var chart = new google.visualization.Map(
+       document.getElementById('Missing_Counts')
+     );
+     chart.draw(data,options);
+
+
+}
+
+
+// jsDisplayChart 
+function displayChartMissing_Counts()
+{
+  google.load("visualization", "1", { packages:["map"] }); 
+  google.setOnLoadCallback(drawChartMissing_Counts);
+}
+
+// jsChart 
+displayChartMissing_Counts()
+
+<!-- jsFooter -->  
+//-->
+</script>
+
+<!-- divChart -->
+
+<div id="Missing_Counts"
+  style="width: 800px; height: 600px;">
+</div>
+
+
+
+</div>
+<div class="section slide level1" id="missing-pattern-spatially">
+<h1>Missing Pattern (spatially)</h1>
+<div class="figure">
+<img src="figure/unnamed-chunk-3.png" alt="plot of chunk unnamed-chunk-3" /><p class="caption">plot of chunk unnamed-chunk-3</p>
+</div>
+</div>
+<div class="section slide level1" id="structure-heatmap-temporally-original-spatial-order">
+<h1>Structure Heatmap (temporally, original spatial order)</h1>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">source</span>(<span class="st">&quot;functions.R&quot;</span>)
+<span class="kw">HeatStruct</span>(hqmr.cube) + <span class="kw">opts</span>(<span class="dt">axis.text.x =</span> <span class="ot">NULL</span>) + <span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="kw">c</span>(<span class="dv">325</span>, 
+    <span class="dv">900</span>), <span class="dt">col =</span> <span class="st">&quot;darkblue&quot;</span>, <span class="dt">lty =</span> <span class="dv">2</span>, <span class="dt">lwd =</span> <span class="dv">1</span>)</code></pre>
+<div class="figure">
+<img src="figure/unnamed-chunk-4.png" alt="plot of chunk unnamed-chunk-4" /><p class="caption">plot of chunk unnamed-chunk-4</p>
+</div>
+</div>
+<div class="section slide level1" id="structure-heatmap-reordered-by-missingness">
+<h1>Structure Heatmap (reordered by missingness)</h1>
+<div class="figure">
+<img src="figure/unnamed-chunk-5.png" alt="plot of chunk unnamed-chunk-5" /><p class="caption">plot of chunk unnamed-chunk-5</p>
+</div>
+</div>
+<div class="section slide level1" id="cross-validation">
+<h1>Cross-Validation</h1>
+<ul class="incremental">
+<li>grid-wise</li>
+<li>10 fold on the columns</li>
+<li>different row size (1 year, 5 years, 10 years)</li>
+<li>randomization (both on rows and columns)</li>
+<li>Mean-RMSE for each CUTOFF value from 0.55-0.95, by 0.05</li>
+</ul>
+</div>
+<div class="section slide level1" id="cv-results">
+<h1>CV results</h1>
+<div class="figure">
+<img src="figure/unnamed-chunk-6.png" alt="plot of chunk unnamed-chunk-6" /><p class="caption">plot of chunk unnamed-chunk-6</p>
+</div>
+</div>
+<div class="section slide level1" id="performance-cutoff">
+<h1>Performance (CUTOFF)</h1>
+<div class="figure">
+<img src="figure/unnamed-chunk-7.png" alt="plot of chunk unnamed-chunk-7" /><p class="caption">plot of chunk unnamed-chunk-7</p>
+</div>
+</div>
+<div class="section slide level1" id="comparison">
+<h1>Comparison</h1>
+<div class="figure">
+<img src="figure/unnamed-chunk-8.png" alt="plot of chunk unnamed-chunk-8" /><p class="caption">plot of chunk unnamed-chunk-8</p>
+</div>
+</div>
+<div class="section slide level1" id="comparison-more">
+<h1>Comparison (more)</h1>
+<div class="figure">
+<img src="figure/unnamed-chunk-9.png" alt="plot of chunk unnamed-chunk-9" /><p class="caption">plot of chunk unnamed-chunk-9</p>
+</div>
+</div>
+<div class="section slide level1" id="simulation">
+<h1>Simulation</h1>
+<ul class="incremental">
+<li>Capturing the Missing pattern (block Missing and dot missing)</li>
+<li>Knowing the real value in advance (the middle chunk complete data)</li>
+<li>In a word:</li>
+</ul>
+</div>
+<div class="section slide level1" id="heat-structure-transformed-reordered">
+<h1>Heat Structure (Transformed $ Reordered)</h1>
+</div>
+<div class="section slide level1" id="simulation-workhorse-a-missing-vector">
+<h1>Simulation workhorse (a missing vector)</h1>
+<ul class="incremental">
+<li><em>n</em>: length of the vector</li>
+<li><em>maxlen</em>: max length of missing block</li>
+<li><em>prob</em>: fixed probability of being missing for each obs</li>
+<li><em>cnst</em>: a constant for controlling the probability increment, which is \[ prob^{*}=\frac{count+cnst}{maxlen+cnst}\]</li>
+</ul>
+</div>
+<div class="section slide level1" id="one-simulation">
+<h1>One simulation</h1>
+</div>
+<div class="section slide level1" id="conclusion">
+<h1>Conclusion</h1>
+</div>
+<div class="section slide level1" id="outlook-and-future-work">
+<h1>Outlook and future work</h1>
+</div>
+</body>
+</html>

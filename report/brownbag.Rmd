@@ -16,15 +16,12 @@
 	- Why it it important & difficult	
 	- What is our aim?
 * Related Literature
-	- Literarure Review
-  - Status
+	
 * Methods
     - SVD
     - CUTOFF
 * Case Study in Australia
-	- Data and EDA
-	- Imputation Performance
-	- Comparison and more
+
 * Potential and Future Work
 
 	
@@ -43,8 +40,6 @@
 
 *You can think it as a set of multivariate time series that are geographically distributed*
 
-
-*"space-time: the next frontier"* -- Noel Cressie & Christopher K. Wikle ( 2011 )
 
 # Examples
 
@@ -66,7 +61,7 @@
 
 * For data structure consistency, and ultimately for modelling 
 
-* Model estimating procedure assumes faily completeness upon the data matrix
+* Model estimating procedure assumes fairly completeness upon the data matrix
 
 * If there were missing values in your data, sooner or later, you would have to face the problem.
 
@@ -81,26 +76,28 @@
 
 # Our aim 
 
-* To develope a simple, intuitive, credible method to impute spatio-temporal model
+* To develope a simple, intuitive method to impute spatio-temporal data before modelling
 
 * which takes both spatial and temporal information into consideration
 
-* and we hope it'd be faster than some universally accepted method
+* and we hope it'd be faster than some accepted methods
+
 
 # What have we achieved
 
-* Developed a method called **CUTOFF** that meets our aim
+
+* Developed a method which is very simple and intuitive
 
 * Applied it to a monthly rainfall data
 
-* Some visualization, simulation and cross-validation tools that are useful when analysing spatio-temporal data
+* Some tools that are useful when dealing with spatio-temporal missing problem
 
 
 # Related Literature (cont'd)
 
 * Schneider (2001) proposes a parametric method that makes use of E-M algorithm and ridge regression to estimate the mean and covariance matrix of the data iteratively. (*spatially weak, and no package supported*)
 
-* Kondrashov et al. (2006) developes an novel, iterative for of M-SSA( Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.
+* Kondrashov et al. (2006) developes an novel, iterative form of M-SSA (Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.
 
 * It raised a heat debate (Schneider (2006)'s interesting comment and Kondrashov et al.'s rejoinder)
 
@@ -108,14 +105,17 @@
 
 * K's idea comes down to matrix decomposition and EM algorithm
 
-* The cros-validation procedure used in their paper is vague and thus untenable
+* The cross-validation procedure used in their paper is vague and difficult to understand
 
-* Heavily relying on the MAR ( Missing At Random)assumption. MAR is, techinically, impossible.
+* Heavily relying on the MAR (Missing At Random) assumption, which sometimes, is not the truth
+
 
 # SVD imputation
+
+
 * Fuentes et al.(2006), it is stable and reasonble 
 
-* partly nonparametric, E-M like
+* partly nonparametric, E-M like, counld be used before modelling
 
 * standard imputation method in the `SpatioTemporal` R pakage 
 
@@ -123,6 +123,7 @@ We consider it as the competetor
 
 
 # Methods: SVD 
+
 * Assume a typical S-P data set comprises $x$ monitoring sites and each site has $t$ observations. This S-P process can be modelled as 
 $$Z(s,t)=\mu(s,t)+\varepsilon(x,t)$$
 and thus $$\mathbf{Z}=\mathbf{M}+\mathbf{E}$$
@@ -134,7 +135,7 @@ and thus $$\mathbf{Z}=\mathbf{M}+\mathbf{E}$$
 # cont'd (the `SVD.miss()` does so)
 
 * Specify a rank $J$, default to be 4
-* $\mu_{1}$ is row means of $mathbf{Z}$, that is the mean values for non-missing values at each time point across all sites. Replace all NAs in $\mathbf{Z}$ with zeros. 
+* $\mu_{1}$ is row means of $\mathbf{Z}$, that is the mean values for non-missing values at each time point across all sites. Replace all NAs in $\mathbf{Z}$ with zeros. 
 * Regression through each column of $\mathbf{Z}$ on the initial regressor $\mu_{1}$ and filling the missing values by the fitted values of the regression on that column. Assume $Z_{(i,j)}$ were missing, then it would be replaced by $\alpha_{j}\centerdot\mu_{1(i)}$, where $\alpha_{j}$ is the regression coef by regressing the $j^{th}$ column of $\mathbf{Z}$ on $\mu_{1}$.
 * Compute the $J$ SVD approximation of the imputed matrix and do regression of each column of the new data matrix on the $J$ vectors of basis function. The originally missed values are then replaced by the fitted values of this new regression.
 * Repeat the SVD and regression until convergence.
@@ -200,21 +201,99 @@ library(googleVis)
 load("nmissing_station.Rdata")
 stationmap <- gvisMap(nmissing_station, locationvar="locationvar", tipvar="id",
                       options=list(showTip=TRUE, enableScrollWheel=TRUE, mapType='hybrid',
-                                   useMapTypeControl=TRUE, width=600,height=500),
+                                   useMapTypeControl=TRUE, width=800,height=600),
                                   chartid="Missing_Counts")
 print(stationmap, "chart")
 ```
 
 
-# Missing Pattern 
+# Missing Pattern (spatially)
 
-```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8, fig.show='asis'}
-
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+library(sp)
 load("station_info.Rdata")
 plot(mdb.pol, border="grey",lty=3, axes=T, xlim=c(139,150), ylim=c(-39,-24))
-
+plot(rbasin.chain[rbasin.chain$F_CODE%in%coast.bdrs,], add=T)
+plot(rbasin.chain[rbasin.chain$F_CODE%in%state.bdrs,], lty=2, add=T)
+sunflowerplot(nmissing_stations$Lon, nmissing_stations$Lat, number=nmissing_stations$nmissings, pch=20, col="red", size=0.2, seg.col="darkgreen", add=TRUE)
+# text(nmissing_stations$Lon,nmissing_stations$Lat,nmissing_stations$id,cex=0.5)
+title(xlab="Longitude", ylab="Latitude", main="Missing Counts_Sunflowerplot")
 
 ```
+
+# Structure Heatmap (temporally, original spatial order)
+```{r message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+source("functions.R")
+HeatStruct(hqmr.cube) +
+  opts(axis.text.x = NULL) +
+  geom_hline(yintercept = c(325, 900), col = "darkblue", lty=2, lwd=1)
+```
+
+# Structure Heatmap (reordered by missingness)
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+HeatStruct(hqmr.cube.reorder)+opts(axis.text.x = NULL)+geom_hline(yintercept = c(325, 900), col = "darkblue", lwd=1)+geom_vline(xintercept = c(17.5, 54.5), col="darkblue", lwd=1)
+```
+
+# Cross-Validation
+
+* grid-wise
+  * 10 fold on the columns
+  * different row size (1 year, 5 years, 10 years)
+* randomization (both on rows and columns)
+* Mean-RMSE for each CUTOFF value from 0.55-0.95, by 0.05
+
+# CV results
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("cvplot.Rdata")
+cv_plot
+```
+
+
+
+# Performance (CUTOFF)
+```{r warning=FALSE,echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("imputed_plot1.Rdata")
+source("functions.R")
+implot2(list(p1, p2, p3, p4, p5, p6))
+```
+
+# Comparison 
+```{r warning=FALSE,echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("comparison_plot1.Rdata")
+source("functions.R")
+implot2(list(c1, c2, c3))
+```
+
+# Comparison (more)
+
+```{r warning=FALSE,echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("comparison_plot1.Rdata")
+source("functions.R")
+implot2(list(c4, c5, c6))
+```
+
+# Simulation
+
+* Capturing the Missing pattern (block Missing and dot missing)
+* Knowing the real value in advance (the middle chunk complete data)
+* In a word: 
+
+# Heat Structure (Transformed $ Reordered)
+
+# Simulation workhorse (a missing vector)
+
+* *n*: length of the vector
+* *maxlen*: max length of missing block 
+* *prob*: fixed probability of being missing for each obs
+* *cnst*: a constant for controlling the probability increment, which is $$ prob^{*}=\frac{count+cnst}{maxlen+cnst}$$
+
+# One simulation
+
+# Conclusion
+
+# Outlook and future work
+
+
 
 
 
