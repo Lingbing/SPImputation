@@ -1,0 +1,299 @@
+% Missing Value Imputation for Spatio-Temporal Data Analysis: A Case Study
+% Lingbing Feng
+% 2012/09/17
+
+# Missing Value
+
+![Missing Piece](http://i.imgur.com/45zNc.jpg)
+
+---
+
+
+# Agenda
+
+* Motivation
+  - What is Spatio-Temporal & Imputation
+  - Why it it important & difficult	
+	- What is our aim?
+* Related Literature
+	
+* Methods
+    - SVD
+    - CUTOFF
+* Case Study in Australia
+
+* Potential and Future Work
+
+	
+	 
+
+# Spatio-Temporal Data
+
+
+***Spatio-temproral data: data with spatial (geographic), temporal components, and attributes.***
+
+* Where  ------ space
+
+* when   ------ time
+
+* what   ------ attributes
+
+*You can think it as a set of multivariate time series that are geographically distributed*
+
+
+# Examples
+
+* Climatic readings ( temperature, rainfall, riverflow, etc. ) for a number of nearby stations
+
+* Satellite images of parts of the earth
+
+* Election results for voting districts and a number of consecutive elections
+
+* GPS tracks for people or animal possibly with additional sensor readings
+
+* Desease outbreaks or volcano eruption
+
+* …
+
+# what is imputation and why?
+
+* Filling Missing values, completing the incomplete data
+
+* For data structure consistency, and ultimately for modelling 
+
+* Model estimating procedure assumes fairly completeness upon the data matrix
+
+* If there were missing values in your data, sooner or later, you would have to face the problem.
+
+
+# It is difficult when
+
+* You take it seriously, rather than saying:*"Here we have chosen to ignore the missing values"*, or *"For the sake of convenience, we case-wise delete all the missing values"*
+
+* You take it very seriously, and you want to impute the missing value by incorporating as much valuable information as possible. 
+
+* You take it extremly seriously, and you want an algorithm which is intuitively simple, credible, and computational efficient.
+
+# Our aim 
+
+* To develope a simple, intuitive method to impute spatio-temporal data before modelling
+
+* which takes both spatial and temporal information into consideration
+
+* and we hope it'd be faster than some accepted methods
+
+
+# What have we achieved
+
+
+* Developed a method which is very simple and intuitive
+
+* Applied it to a monthly rainfall data
+
+* Some tools that are useful when dealing with spatio-temporal missing problem
+
+
+# Related Literature (cont'd)
+
+* Schneider (2001) proposes a parametric method that makes use of E-M algorithm and ridge regression to estimate the mean and covariance matrix of the data iteratively. (*spatially weak, and no package supported*)
+
+* Kondrashov et al. (2006) developes an novel, iterative form of M-SSA (Multi-channel Singualr Spectrum Analysis) approach which utilizes temporal, as well as spatial correlations (as they claimed so) to fill in gaps.
+
+* It raised a heat debate (Schneider (2006)'s interesting comment and Kondrashov et al.'s rejoinder)
+
+# We found
+
+* K's idea comes down to matrix decomposition and EM algorithm
+
+* The cross-validation procedure used in their paper is vague and difficult to understand
+
+* Heavily relying on the MAR (Missing At Random) assumption, which sometimes, is not the truth
+
+
+# SVD imputation
+
+
+* Fuentes et al.(2006), it is stable and reasonble 
+
+* partly nonparametric, E-M like, counld be used before modelling
+
+* standard imputation method in the `SpatioTemporal` R pakage 
+
+We consider it as the competetor 
+
+
+# Methods: SVD 
+
+* SVD is a highlight of linear algebra (Gilbert Strang), "Crown jewel" of linear algebra
+  * feature extraction
+  * dimensionality reduction
+* Its relationship with PCA (Principal Component Analysis)
+  * PCA is done by eigenvalue decomposition (spectral decomposition) on the covariance matrix
+  * normally, PCA can be done easily by doing SVD on the original data matrix
+
+# SVD (the `SVD.miss()` does so)
+
+
+
+# Summary for the SVD imputation
+
+* The SVD method involves a iterative process of matrix decompisition and regression.
+* initializing -> reg(1) -> SVD -> reg -> SVD -> reg -> ...
+* Works well when most of the sites share sonme similar temporal patterns
+* Be watchful when obs have a substantial variation around the trend, the SVD approx might be a noisy representation of the real pattern
+* I reckon the SVD method as being partly temporal imputation rather than spatio-temporally
+
+# `CUTOFF` method: notations (take monthly data for example)
+Let $x_{(i,j),k}$ be the observation in month $i$ of year $j$ in station $k$. Assume a particular $x_{(i^{*},j^{*}),k^{*}}$ was missing, we call the month $i^{*}$ a candidate month, the year $j^{*}$ and the station $k^{*}$ a candidate station.For each missing value, we complete it by following steps:
+
+* create a **Reference file** with a few stations that have a high correlation ($\rho$) with the candidate station. We have developed a cross-validation plus a simulation procedure to choose the optimal $\rho$.
+* Let $L_{k}$ denote the set of reference station for $k_{th}$ station, and let $J_{i,k}$ denote the set of years for which $x_{(i,j),k}$ is not missing for month $i$ and station $k$, excluding year $j^{*}$.
+* letting $\bar{R}$ be the mean value of observations in the reference file including all available points in years $j$ (not including the candidate year) in month $i$, $\bar{C}$ the mean value of observations in year $j$ in month $i$ for that special candidate station and $R$ the mean of $l$ reference stations in that particular month $i$ and year $j$ ( "R" is the initial of "Reference" and "C" is of "Candidate" ), so
+
+# `CUTOFF` method:(cont'd)
+
+$$
+\begin{eqnarray}
+\bar{R} & = & \frac{\underset{k\in L_{k^{*}}}{\sum}\underset{j\in J_{i^{*},k}}{\sum}x_{(i^{*},j),k}}{\underset{k\in L_{k^{*}}}{\sum}|J_{i^{*},k}|}\nonumber \\
+R & = & \frac{\underset{k\in L_{k^{*}}}{\sum}x_{(i^{*},j^{*}),k}}{|L_{k^{*}}|}\\
+\bar{C} & = & \frac{\underset{j\in J_{i^{*},k^{*}}}{\sum}x_{(i^{*},j),k^{*}}}{|J_{i^{*},k^{*}}|}\nonumber 
+\end{eqnarray}
+$$
+* Let $\hat{x}$be the imputed value for the candidate value , assuming equation below holds
+$$
+\frac{\hat{x}}{R}=\frac{\bar{C}}{\bar{R}}
+$$
+then 
+$$
+\hat{x}=R\cdot\left(\dfrac{\bar{C}}{\bar{R}}\right)
+$$
+
+# `CUTOFF` method: adjustments (cont'd)
+
+* Some stations may have no reference file when the cut-off value is big. If so, we set the nearest station as the reference station no matter what the cut-off value is.
+* If we have done above, then every station should have at least one reference station. However, even so, if by any chance for a candidate station which is missing in a certain time point, the observations in the reference station(s) are missing too, which means it is impossible to compute $R$, then the whole imputation would fail. In the CUTOFF method, this case is circumvented by keeping tracking down the reference list to find a station that is not missing in that time point. Here, the reference list includes all stations sorted by correlation with the candidate station. 
+* There is only one case we could imagine that would fail the whole imputation if we stick to thesteps above-listed, that is when there is a whole row missing. All otherwise cases would be fine imputed by our method.
+
+# Case Study in Australia: Data and EDA
+
+* Murray-Darling Basin, 78 gauging stations
+* 100 years' monthly data (Jan 1911 - Dec 2010)
+* Rainfall
+
+# Representation (Space-wide format)
+
+* Different columns reflect different stations
+
+```{r echo=FALSE, message=FALSE,comment=""}
+load("keyobject.Rdata")
+head(hqmr.data[, c(79, 33:39)], 10)
+```
+
+# locations
+
+```{r results="asis", echo=FALSE, message=FALSE}
+library(googleVis)
+load("nmissing_station.Rdata")
+stationmap <- gvisMap(nmissing_station, locationvar="locationvar", tipvar="id",
+                      options=list(showTip=TRUE, enableScrollWheel=TRUE, mapType='hybrid',
+                                   useMapTypeControl=TRUE, width=800,height=600),
+                                  chartid="Missing_Counts")
+print(stationmap, "chart")
+```
+
+
+# Missing Pattern (spatially)
+
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+library(sp)
+load("station_info.Rdata")
+plot(mdb.pol, border="grey",lty=3, axes=T, xlim=c(139,150), ylim=c(-39,-24))
+plot(rbasin.chain[rbasin.chain$F_CODE%in%coast.bdrs,], add=T)
+plot(rbasin.chain[rbasin.chain$F_CODE%in%state.bdrs,], lty=2, add=T)
+sunflowerplot(nmissing_stations$Lon, nmissing_stations$Lat, number=nmissing_stations$nmissings, pch=20, col="red", size=0.2, seg.col="darkgreen", add=TRUE)
+# text(nmissing_stations$Lon,nmissing_stations$Lat,nmissing_stations$id,cex=0.5)
+title(xlab="Longitude", ylab="Latitude", main="Missing Counts_Sunflowerplot")
+
+```
+
+# Structure Heatmap (temporally, original spatial order)
+```{r message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+source("functions.R")
+HeatStruct(hqmr.cube) +
+  opts(axis.text.x = NULL) +
+  geom_hline(yintercept = c(325, 900), col = "darkblue", lty=2, lwd=1)
+```
+
+# Structure Heatmap (reordered by missingness)
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+HeatStruct(hqmr.cube.reorder)+opts(axis.text.x = NULL)+geom_hline(yintercept = c(325, 900), col = "darkblue", lwd=1)+geom_vline(xintercept = c(17.5, 54.5), col="darkblue", lwd=1)
+```
+
+# Cross-Validation
+
+* grid-wise
+  * 10 fold on the columns
+  * different row size (1 year, 5 years, 10 years)
+* randomization (both on rows and columns)
+* Mean-RMSE for each CUTOFF value from 0.55-0.95, by 0.05
+
+# CV results
+```{r echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("cvplot.Rdata")
+cv_plot
+```
+
+
+
+# Performance (CUTOFF)
+```{r warning=FALSE,echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("imputed_plot1.Rdata")
+source("functions.R")
+implot2(list(p1, p2, p3, p4, p5, p6))
+```
+
+# Comparison 
+```{r warning=FALSE,echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("comparison_plot1.Rdata")
+source("functions.R")
+implot2(list(c1, c2, c3))
+```
+
+# Comparison (more)
+
+```{r warning=FALSE,echo=FALSE, message=FALSE, fig.align='center', fig.width=10, fig.height=8}
+load("comparison_plot1.Rdata")
+source("functions.R")
+implot2(list(c4, c5, c6))
+```
+
+# Simulation
+
+* Capturing the Missing pattern (block Missing and dot missing)
+* Knowing the real value in advance (the middle chunk complete data)
+* In a word: 
+
+# Heat Structure (Transformed $ Reordered)
+
+# Simulation workhorse (a missing vector)
+
+* *n*: length of the vector
+* *maxlen*: max length of missing block 
+* *prob*: fixed probability of being missing for each obs
+* *cnst*: a constant for controlling the probability increment, which is $$ prob^{*}=\frac{count+cnst}{maxlen+cnst}$$
+
+# One simulation
+
+# Conclusion
+
+# Outlook and future work
+
+
+
+
+
+
+
+
+
+
