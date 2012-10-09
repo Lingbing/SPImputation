@@ -70,7 +70,7 @@ missing_bubble<-gvisBubbleChart(nmissing_station,idvar="id",xvar="Lat",yvar="Lon
 plot(missing_bubble)## seems of no use at all!
 
 ## missing on the map(should be better than the bubble plot)
-missing_map<-gvisGeoMap(data=nmissing_stations,locationvar="locationvar", numvar="nmissings", hovervar="id",
+missing_map<-gvisGeoMap(data=nmissing_station,locationvar="locationvar", numvar="nmissings", hovervar="id",
                         options=list(region="AU", width=1100, height=1100, dataMode="markers", showZoomOut=TRUE), chartid="Missing_Counts")
 plot(missing_map)
 # below is for merging
@@ -83,7 +83,7 @@ missing_map2<-gvisGeoMap(data=nmissing_station, locationvar="locationvar",numvar
 nmissing_station$size<-rep(1,78)
 missing_geochart<-gvisGeoChart(nmissing_station,locationvar="locationvar",colorvar="nmissings",sizevar="size",
                                options=list(region="AU",displayMode="Markers",backgroundColor="lightblue",markerOpacity=0.5,
-                                            keepAspectRatio=FALSE,width=1200,height=900),
+                                            keepAspectRatio=FALSE,width=800,height=600),
                                chartid="Missing_Counts")
 plot(missing_geochart)
 # below is for merging
